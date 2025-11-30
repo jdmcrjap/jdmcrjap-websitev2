@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tsukuba Circuit Racer</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP',Arial,sans-serif;transition:background .5s;overflow-x:hidden;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff}
+:root{--accent:#c41e3a;--card-bg:rgba(0,0,0,.8);--border:#444}
+
+/* THEMES */
+body.sakura{background:linear-gradient(135deg,#ffc0cb,#ffb6c1,#ff69b4,#87ceeb);color:#2d1b2e;--accent:#ff1493}
+body.neon{background:linear-gradient(135deg,#0a192f,#112240,#1d3557);color:#00d9ff;--accent:#00d9ff}
+body.purple{background:linear-gradient(135deg,#2e1a47,#4a2c6d,#6b4ea3);color:#e6d5ff;--accent:#9b59b6}
+body.initiald{background:#000;color:#0f0;--accent:#0f0;font-family:'Courier New',monospace}
+body.sunset{background:linear-gradient(135deg,#1a2a6c,#b21f1f,#fdbb2d);color:#fff;--accent:#fdbb2d}
+body.midnight{background:linear-gradient(135deg,#0f0e17,#1a1a2e,#0f0e17);color:#ff8906;--accent:#ff8906}
+
+/* MARQUEE ANIMATIONS */
+.marquee{background:var(--accent);color:#fff;padding:.5rem 0;overflow:hidden;white-space:nowrap;font-weight:700;font-size:1.1rem;position:relative}
+body.neon .marquee{background:linear-gradient(90deg,#00d9ff,#7000ff,#00d9ff);box-shadow:0 0 20px rgba(0,217,255,.5);animation:neonPulse 2s infinite}
+body.sakura .marquee{background:linear-gradient(90deg,#ff69b4,#ffb6c1,#ff1493);animation:glow 2s infinite}
+body.sunset .marquee{background:linear-gradient(90deg,#fdbb2d,#ff6b6b,#fdbb2d);animation:glow 2s infinite}
+body.midnight .marquee{background:linear-gradient(90deg,#ff8906,#f25f4c,#ff8906);animation:glow 2s infinite}
+body.initiald .marquee{background:#0f0;color:#000;animation:glitch 1s infinite}
+
+@keyframes glow{0%,100%{box-shadow:0 0 10px var(--accent)}50%{box-shadow:0 0 30px var(--accent)}}
+@keyframes neonPulse{0%,100%{box-shadow:0 0 20px rgba(0,217,255,.5)}50%{box-shadow:0 0 40px rgba(0,217,255,1)}}
+@keyframes glitch{0%,90%,100%{opacity:1}93%{opacity:.7}96%{opacity:1}}
+
+.marquee span{display:inline-block;padding-left:100%;animation:scroll 20s linear infinite}
+@keyframes scroll{0%{transform:translate(0,0)}100%{transform:translate(-100%,0)}}
+
+/* SAKURA PETALS */
+.sakura-petal{position:fixed;pointer-events:none;z-index:9999;opacity:.7;animation:fall linear infinite}
+@keyframes fall{
+  0%{top:-10%;transform:translateX(0) rotate(0deg)}
+  100%{top:110%;transform:translateX(100px) rotate(360deg)}
+}
+
+.container{max-width:1600px;margin:0 auto;padding:1rem}
+.header{text-align:center;border:4px solid var(--accent);background:var(--card-bg);padding:2rem;margin-bottom:1.5rem;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.header h1{font-size:3rem;color:var(--accent);text-shadow:3px 3px 0 rgba(0,0,0,.3);margin-bottom:.5rem}
+.save-ind{display:inline-block;padding:.5rem 1rem;background:rgba(40,167,69,.2);border:2px solid #28a745;border-radius:20px;margin-top:1rem;font-weight:700;color:#28a745;animation:pulse-save 2s infinite}
+@keyframes pulse-save{0%,100%{opacity:1}50%{opacity:.5}}
+
+.themes{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;justify-content:center}
+.theme-btn{width:50px;height:50px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .3s}
+.theme-btn:hover{transform:scale(1.2);border-color:var(--accent)}
+.theme-btn.active{border-color:var(--accent);box-shadow:0 0 20px var(--accent)}
+
+.tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{flex:1;padding:1rem;background:transparent;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .3s;color:inherit;font-weight:700;min-width:150px}
+.tab:hover{border-color:var(--accent);transform:translateY(-2px)}
+.tab.active{background:var(--accent);color:#fff}
+
+.section{display:none}
+.section.active{display:block;animation:fadeIn .5s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--card-bg);border:3px solid var(--accent);border-radius:15px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.card h2{color:var(--accent);margin-bottom:1rem;border-bottom:2px solid var(--accent);padding-bottom:.5rem}
+
+.carousel{display:flex;overflow-x:auto;gap:1.5rem;padding:1rem 0;scroll-behavior:smooth}
+.carousel::-webkit-scrollbar{height:8px}
+.carousel::-webkit-scrollbar-track{background:rgba(0,0,0,.3);border-radius:4px}
+.carousel::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
+
+.car-card{min-width:300px;background:rgba(0,0,0,.6);border:3px solid var(--border);border-radius:15px;padding:1.5rem;transition:all .3s;cursor:pointer}
+.car-card:hover{border-color:var(--accent);transform:translateY(-5px)}
+
+.car-img{width:100%;height:180px;background:rgba(0,0,0,.5);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;position:relative;overflow:hidden}
+.car-img img{width:100%;height:100%;object-fit:contain}
+
+.fullscreen{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:var(--card-bg);z-index:10000;padding:2rem;overflow-y:auto}
+.fullscreen.active{display:block}
+
+.fs-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;border-bottom:4px solid var(--accent);padding-bottom:1rem}
+.fs-title{font-size:3rem;font-weight:900;color:var(--accent)}
+
+.close-btn{width:60px;height:60px;background:var(--accent);border:none;border-radius:50%;color:#fff;font-size:2.5rem;cursor:pointer;transition:all .3s}
+.close-btn:hover{transform:rotate(90deg) scale(1.1)}
+
+.circuit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:2rem}
+.circuit-card{background:var(--card-bg);border:4px solid var(--accent);border-radius:20px;padding:2rem;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+
+.circuit-img{width:100%;height:250px;background:rgba(0,0,0,.3);border-radius:10px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.circuit-img img{width:100%;height:100%;object-fit:contain}
+
+.circuit-name{font-size:2rem;font-weight:700;color:var(--accent);margin-bottom:.5rem;text-align:center}
+.circuit-name-en{font-size:1.2rem;opacity:.8;margin-bottom:1.5rem;text-align:center}
+
+.sound-btns{display:flex;flex-direction:column;gap:.75rem}
+.sound-btn{padding:1.2rem;background:var(--accent);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;transition:all .3s;display:flex;justify-content:space-between;align-items:center}
+.sound-btn:hover{transform:scale(1.05)}
+.sound-btn.playing{animation:pulse 1s infinite;background:#28a745}
+.sound-btn.disabled{background:#666;cursor:not-allowed;opacity:.5}
+
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(40,167,69,.7)}50%{box-shadow:0 0 0 15px rgba(40,167,69,0)}}
+
+.btn{background:var(--accent);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:8px;cursor:pointer;font-weight:700;transition:all .3s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.btn-danger{background:#dc3545}
+.btn-small{padding:.5rem 1rem;font-size:.85rem}
+
+input[type=file]{display:none}
+input[type=text]{width:100%;padding:.75rem;margin:.5rem 0;background:rgba(255,255,255,.1);border:2px solid var(--border);border-radius:8px;color:inherit}
+input[type=text]:focus{outline:0;border-color:var(--accent)}
+input[type=checkbox]{width:25px;height:25px;cursor:pointer;accent-color:var(--accent)}
+
+.sound-indicators{display:flex;gap:.3rem;margin-top:1rem}
+.indicator{flex:1;height:8px;border-radius:4px;transition:all .3s}
+.indicator.yes{background:#28a745}
+.indicator.no{background:#666}
+
+@media (max-width:768px){
+  .header h1{font-size:2rem}
+  .circuit-grid{grid-template-columns:1fr}
+  .car-card{min-width:250px}
+}
+</style>
+</head>
+<body>
+
+<div class="marquee"><span>🏁 TSUKUBA CIRCUIT RACER 🏁 DRIFT KING 👑 INITIAL D SPIRIT 🌸 STREET RACING 90's 💨 AUTO SAVE 💾 TURBO BOOST 🚀</span></div>
+<div class="marquee" style="animation-delay:-10s;margin-top:2px"><span>⚡ TOKYO DRIFT ⚡ RACING LEGENDS 🏆 NEON NIGHTS 🌃 SAKURA SPEED 🌸 JDM CULTURE 🇯🇵 BOOST MODE 💨</span></div>
+
+<div class="container">
+  <div class="header">
+    <h1>筑波サーキット</h1>
+    <p style="font-size:1.3rem;color:var(--accent);font-weight:700">TSUKUBA CIRCUIT RACER</p>
+    <div class="save-ind">💾 AUTO SAVE ACTIVE</div>
+  </div>
+
+  <div style="text-align:center;margin-bottom:1rem">
+    <p style="font-weight:700;margin-bottom:.5rem">🎨 THEMES</p>
+    <div class="themes">
+      <button class="theme-btn active" onclick="setTheme('')" style="background:linear-gradient(135deg,#1a1a2e,#0f3460)" title="Dark"></button>
+      <button class="theme-btn" onclick="setTheme('sakura')" style="background:linear-gradient(135deg,#ffb6c1,#ff69b4)" title="Sakura"></button>
+      <button class="theme-btn" onclick="setTheme('neon')" style="background:linear-gradient(135deg,#0a192f,#00d9ff)" title="Neon"></button>
+      <button class="theme-btn" onclick="setTheme('purple')" style="background:linear-gradient(135deg,#2e1a47,#9b59b6)" title="Purple"></button>
+      <button class="theme-btn" onclick="setTheme('initiald')" style="background:#000;border:2px solid #0f0" title="Initial D"></button>
+      <button class="theme-btn" onclick="setTheme('sunset')" style="background:linear-gradient(135deg,#ff6b6b,#feca57,#ee5a6f)" title="Sunset"></button>
+      <button class="theme-btn" onclick="setTheme('midnight')" style="background:linear-gradient(135deg,#0f0e17,#ff8906)" title="Midnight"></button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showSection('music')">🎵 MUSIC</button>
+    <button class="tab" onclick="openFullscreen()">🏁 CIRCUIT</button>
+    <button class="tab" onclick="showSection('garage')">🚗 GARAGE</button>
+  </div>
+
+  <div id="music" class="section active">
+    <div class="card">
+      <h2>🎵 MUSIC PLAYER</h2>
+      <p id="track-name" style="font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:1rem">No track loaded</p>
+      <label for="music-up" class="btn">📁 UPLOAD MUSIC</label>
+      <input type="file" id="music-up" accept="audio/*" multiple onchange="uploadMusic(this.files)">
+      <div id="track-list" style="margin-top:1rem"></div>
+    </div>
+  </div>
+
+  <div id="garage" class="section">
+    <div class="card">
+      <h2>🚗 GARAGE</h2>
+      <input type="text" id="new-jp" placeholder="日本語名 (ex: スカイライン)">
+      <input type="text" id="new-en" placeholder="English name (ex: Skyline GT-R)">
+      <button class="btn" onclick="addCar()">➕ ADD CAR</button>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--accent);margin-bottom:1rem">CAR LIST (☑ = Add to circuit)</h3>
+      <div class="carousel" id="car-list"></div>
+    </div>
+    <div id="sound-section" class="card" style="display:none">
+      <h3 style="color:var(--accent)">🔊 ADD SOUNDS</h3>
+      <p>Car: <span id="sel-car" style="color:var(--accent)"></span></p>
+      <div id="sound-uploads"></div>
+    </div>
+  </div>
+</div>
+
+<div class="fullscreen" id="fullscreen">
+  <div class="fs-header">
+    <div>
+      <p class="fs-title">CIRCUIT MODE</p>
+      <p style="font-size:1.2rem"><span id="fs-count">0</span> / 6 CARS</p>
+    </div>
+    <button class="close-btn" onclick="closeFullscreen()">×</button>
+  </div>
+  <div class="circuit-grid" id="circuit-grid"></div>
+</div>
+
+<audio id="music-player"></audio>
+<audio id="car-audio"></audio>
+
+<script>
+let tracks=[];
+let cars=[
+  {nameJP:'スカイライン GT-R',nameEN:'Nissan Skyline GT-R',onCircuit:false,image:null,sounds:{}},
+  {nameJP:'スープラ',nameEN:'Toyota Supra',onCircuit:false,image:null,sounds:{}}
+];
+let selCar=null;
+let playing=null;
+
+const soundTypes={
+  idle:{jp:'アイドリング',en:'IDLE'},
+  revving:{jp:'空ぶかし',en:'REV'},
+  acceleration:{jp:'加速',en:'ACCEL'},
+  drift:{jp:'ドリフト',en:'DRIFT'},
+  turbo:{jp:'ターボ',en:'TURBO'}
+};
+
+function saveData(){
+  try{
+    const data={tracks,cars,theme:document.body.className};
+    localStorage.setItem('tsukuba_data',JSON.stringify(data));
+    console.log('✅ Saved');
+  }catch(e){console.error('Save error:',e)}
+}
+
+function loadData(){
+  try{
+    const saved=localStorage.getItem('tsukuba_data');
+    if(saved){
+      const data=JSON.parse(saved);
+      tracks=data.tracks||[];
+      cars=data.cars||cars;
+      if(data.theme)setTheme(data.theme,true);
+      refreshTracks();
+      refreshGarage();
+      console.log('✅ Loaded');
+    }
+  }catch(e){console.error('Load error:',e)}
+}
+
+function setTheme(t,noSave){
+  document.body.className=t;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+  if(event&&event.target)event.target.classList.add('active');
+  
+  // Remove existing petals
+  const existing=document.querySelectorAll('.sakura-petal');
+  existing.forEach(p=>p.remove());
+  
+  // Add sakura petals effect
+  if(t==='sakura'){
+    for(let i=0;i<15;i++){
+      const petal=document.createElement('div');
+      petal.className='sakura-petal';
+      petal.textContent='🌸';
+      petal.style.cssText=`
+        font-size:${Math.random()*20+15}px;
+        left:${Math.random()*100}vw;
+        animation-duration:${Math.random()*5+10}s;
+        animation-delay:${Math.random()*5}s;
+      `;
+      document.body.appendChild(petal);
+    }
+  }
+  
+  if(!noSave)saveData();
+}
+
+function showSection(s){
+  document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById(s).classList.add('active');
+  event.target.classList.add('active');
+  if(s==='garage')refreshGarage();
+}
+
+function uploadMusic(files){
+  Array.from(files).forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      tracks.push({name:f.name,data:e.target.result});
+      refreshTracks();
+      saveData();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function refreshTracks(){
+  const list=document.getElementById('track-list');
+  list.innerHTML=tracks.map((t,i)=>`
+    <div style="padding:.5rem;background:rgba(255,255,255,.05);margin:.5rem 0;border-radius:5px;cursor:pointer" onclick="playTrack(${i})">
+      ${t.name}
+    </div>
+  `).join('');
+}
+
+function playTrack(i){
+  document.getElementById('music-player').src=tracks[i].data;
+  document.getElementById('music-player').play();
+  document.getElementById('track-name').textContent=tracks[i].name;
+}
+
+function addCar(){
+  const jp=document.getElementById('new-jp').value.trim();
+  const en=document.getElementById('new-en').value.trim();
+  if(!jp&&!en)return alert('Enter a name');
+  cars.push({nameJP:jp||en,nameEN:en||jp,onCircuit:false,image:null,sounds:{}});
+  document.getElementById('new-jp').value='';
+  document.getElementById('new-en').value='';
+  refreshGarage();
+  saveData();
+}
+
+function refreshGarage(){
+  const list=document.getElementById('car-list');
+  list.innerHTML=cars.map((c,i)=>`
+    <div class="car-card">
+      <div class="car-img">
+        ${c.image?`<img src="${c.image}">`:'<span style="font-size:3rem;opacity:.3">🚗</span>'}
+        <label for="img-${i}" style="position:absolute;bottom:10px;right:10px;background:var(--accent);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer">📸</label>
+        <input type="file" id="img-${i}" accept="image/*" onchange="uploadImg(${i},this.files[0])">
+      </div>
+      <p style="font-weight:700;color:var(--accent);font-size:1.2rem">${c.nameJP}</p>
+      <p style="opacity:.7;margin-bottom:1rem">${c.nameEN}</p>
+      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem">
+        <input type="checkbox" ${c.onCircuit?'checked':''} onchange="toggleCircuit(${i})">
+        <button class="btn btn-small" onclick="selectCar(${i})" style="flex:1">🔊 SOUNDS</button>
+        ${cars.length>1?`<button class="btn btn-danger btn-small" onclick="deleteCar(${i})">🗑️</button>`:''}
+      </div>
+      <div class="sound-indicators">
+        ${Object.keys(soundTypes).map(s=>`<div class="indicator ${c.sounds[s]?'yes':'no'}" title="${soundTypes[s].jp}"></div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function uploadImg(i,f){
+  if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    cars[i].image=e.target.result;
+    refreshGarage();
+    saveData();
+  };
+  reader.readAsDataURL(f);
+}
+
+function toggleCircuit(i){
+  const count=cars.filter(c=>c.onCircuit).length;
+  if(!cars[i].onCircuit&&count>=6){
+    alert('Maximum 6 cars!');
+    refreshGarage();
+    return;
+  }
+  cars[i].onCircuit=!cars[i].onCircuit;
+  saveData();
+}
+
+function deleteCar(i){
+  if(cars.length<=1)return alert('Need at least 1 car');
+  if(confirm('Delete?')){
+    cars.splice(i,1);
+    refreshGarage();
+    saveData();
+  }
+}
+
+function selectCar(i){
+  selCar=i;
+  const c=cars[i];
+  document.getElementById('sound-section').style.display='block';
+  document.getElementById('sel-car').textContent=`${c.nameJP} / ${c.nameEN}`;
+  const uploads=document.getElementById('sound-uploads');
+  uploads.innerHTML=Object.keys(soundTypes).map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:.75rem 0;padding:.75rem;background:rgba(0,0,0,.3);border-radius:8px">
+      <div>
+        <span style="font-weight:700">${soundTypes[s].jp} / ${soundTypes[s].en}</span>
+        ${c.sounds[s]?`<br><span style="font-size:.8rem;opacity:.7">✓ ${c.sounds[s].name}</span>`:''}
+      </div>
+      <label for="snd-${i}-${s}" class="btn btn-small">${c.sounds[s]?'🔄':'📁'}</label>
+      <input type="file" id="snd-${i}-${s}" accept="audio/*" onchange="uploadSound(${i},'${s}',this.files[0])">
+    </div>
+  `).join('');
+  document.getElementById('sound-section').scrollIntoView({behavior:'smooth'});
+}
+
+function uploadSound(i,type,f){
+  if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    cars[i].sounds[type]={name:f.name,data:e.target.result};
+    refreshGarage();
+    if(selCar===i)selectCar(i);
+    saveData();
+  };
+  reader.readAsDataURL(f);
+}
+
+function openFullscreen(){
+  const onCircuit=cars.filter(c=>c.onCircuit);
+  if(onCircuit.length===0)return alert('No cars on circuit! Select in garage.');
+  document.getElementById('fullscreen').classList.add('active');
+  document.body.style.overflow='hidden';
+  updateFullscreen();
+}
+
+function closeFullscreen(){
+  document.getElementById('fullscreen').classList.remove('active');
+  document.body.style.overflow='auto';
+}
+
+function updateFullscreen(){
+  const grid=document.getElementById('circuit-grid');
+  const onCircuit=cars.filter(c=>c.onCircuit);
+  document.getElementById('fs-count').textContent=onCircuit.length;
+  grid.innerHTML=onCircuit.map(c=>{
+    const i=cars.indexOf(c);
+    return`
+      <div class="circuit-card">
+        <div class="circuit-img">
+          ${c.image?`<img src="${c.image}">`:'<span style="font-size:5rem;opacity:.3">🚗</span>'}
+        </div>
+        <p class="circuit-name">${c.nameJP}</p>
+        <p class="circuit-name-en">${c.nameEN}</p>
+        <div class="sound-btns">
+          ${Object.keys(soundTypes).map(s=>{
+            const has=c.sounds[s];
+            return`
+              <button class="sound-btn ${has?'':'disabled'}" onclick="${has?`playSound(${i},'${s}')`:''}" data-car="${i}" data-sound="${s}">
+                <span>${soundTypes[s].jp} / ${soundTypes[s].en}</span>
+                <span style="font-size:1.3rem">${has?'▶':'🔒'}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function playSound(i,s){
+  const sound=cars[i].sounds[s];
+  if(!sound)return;
+  const audio=document.getElementById('car-audio');
+  if(playing&&playing.i===i&&playing.s===s){
+    audio.pause();
+    audio.currentTime=0;
+    document.querySelector(`[data-car="${i}"][data-sound="${s}"]`).classList.remove('playing');
+    playing=null;
+    return;
+  }
+  if(playing){
+    document.querySelector(`[data-car="${playing.i}"][data-sound="${playing.s}"]`).classList.remove('playing');
+  }
+  audio.src=sound.data;
+  audio.play();
+  playing={i,s};
+  document.querySelector(`[data-car="${i}"][data-sound="${s}"]`).classList.add('playing');
+}
+
+document.getElementById('car-audio').onended=()=>{
+  if(playing){
+    document.querySelector(`[data-car="${playing.i}"][data-sound="${playing.s}"]`).classList.remove('playing');
+    playing=null;
+  }
+};
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeFullscreen();
+});
+
+loadData();
+refreshGarage();
+</script>
+</body>
+</html>
